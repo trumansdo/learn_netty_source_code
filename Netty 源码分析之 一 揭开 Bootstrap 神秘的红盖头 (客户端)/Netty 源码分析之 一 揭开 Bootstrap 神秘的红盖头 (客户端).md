@@ -3,7 +3,6 @@
 
 [TOC]
 
-
 这一章是 Netty 源码分析系列的第一章, 我打算在这一章中, 展示一下 Netty 的客户端和服务端的初始化和启动的流程, 给读者一个对 Netty 源码有一个大致的框架上的认识, 而不会深入每个功能模块.
 本章会从 Bootstrap/ServerBootstrap 类 入手, 分析 Netty 程序的初始化和启动的流程.
 ## Bootstrap
@@ -49,7 +48,7 @@ try {
 在 Netty 中, Channel 是一个 Socket 的抽象, 它为用户提供了关于 Socket 状态(是否是连接还是断开) 以及对 Socket 的读写等操作. 每当 Netty 建立了一个连接后, 都会有一个对应的 Channel 实例.
 NioSocketChannel 的类层次结构如下:
 
-![Alt text](NioSocketChannel 类层次结构.png)
+![](NioSocketChannel类层次结构.png)
 
 
 这一小节我们着重分析一下 Channel 的初始化过程.
@@ -233,7 +232,7 @@ TailContext 的构造器与 HeadContext 的相反, 它调用了父类 AbstractCh
 ### 关于 EventLoop 初始化
 回到最开始的 EchoClient.java 代码中, 我们在一开始就实例化了一个 NioEventLoopGroup 对象, 因此我们就从它的构造器中追踪一下 EventLoop 的初始化过程.
 首先来看一下 NioEventLoopGroup 的类继承层次:
-![Alt text](NioEventLoopGroup 类层次结构.png)
+![Alt text](NioEventLoopGroup类层次结构.png)
 
 NioEventLoop 有几个重载的构造器, 不过内容都没有什么区别, 最终都是调用的父类MultithreadEventLoopGroup构造器:
 ```
@@ -517,4 +516,4 @@ protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddr
 我们终于看到的最关键的部分了, 庆祝一下!
 上面的代码不用多说, 首先是获取 Java NIO SocketChannel, 即我们已经分析过的, 从 NioSocketChannel.newSocket 返回的 SocketChannel 对象; 然后是调用 SocketChannel.connect 方法完成 Java NIO 层面上的 Socket 的连接.
 最后, 上面的代码流程可以用如下时序图直观地展示:
-![Alt text](Netty 客户端的连接时序图.png)
+![Alt text](Netty客户端的连接时序图.png)
