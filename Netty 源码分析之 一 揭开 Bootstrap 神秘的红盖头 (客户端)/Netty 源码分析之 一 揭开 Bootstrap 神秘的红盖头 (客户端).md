@@ -48,7 +48,8 @@ try {
 ### NioSocketChannel 的初始化过程
 在 Netty 中, Channel 是一个 Socket 的抽象, 它为用户提供了关于 Socket 状态(是否是连接还是断开) 以及对 Socket 的读写等操作. 每当 Netty 建立了一个连接后, 都会有一个对应的 Channel 实例.
 NioSocketChannel 的类层次结构如下:
-![Alt text](./NioSocketChannel 类层次结构.png)
+
+![Alt text](NioSocketChannel 类层次结构.png)
 
 
 这一小节我们着重分析一下 Channel 的初始化过程.
@@ -213,9 +214,9 @@ public DefaultChannelPipeline(AbstractChannel channel) {
 我们调用 DefaultChannelPipeline 的构造器, 传入了一个 channel, 而这个 channel 其实就是我们实例化的 NioSocketChannel, DefaultChannelPipeline 会将这个 NioSocketChannel 对象保存在channel 字段中. DefaultChannelPipeline 中, 还有两个特殊的字段, 即 head 和 tail, 而这两个字段是一个双向链表的头和尾. 其实在 DefaultChannelPipeline 中, 维护了一个以 AbstractChannelHandlerContext 为节点的双向链表, 这个链表是 Netty 实现 Pipeline 机制的关键. 关于 DefaultChannelPipeline 中的双向链表以及它所起的作用, 我在这里暂时不表, 在 **Netty 源码分析之 二 贯穿Netty 的大动脉 ── ChannelPipeline** 中会有详细的分析.
 
 HeadContext 的继承层次结构如下所示:
-![Alt text](./HeadContext.png)
+![Alt text](HeadContext.png)
 TailContext 的继承层次结构如下所示:
-![Alt text](./TailContext.png)
+![Alt text](TailContext.png)
 
 我们可以看到, 链表中 head 是一个 **ChannelOutboundHandler**, 而 tail 则是一个 **ChannelInboundHandler**.
 接着看一下 HeadContext 的构造器:
@@ -232,7 +233,7 @@ TailContext 的构造器与 HeadContext 的相反, 它调用了父类 AbstractCh
 ### 关于 EventLoop 初始化
 回到最开始的 EchoClient.java 代码中, 我们在一开始就实例化了一个 NioEventLoopGroup 对象, 因此我们就从它的构造器中追踪一下 EventLoop 的初始化过程.
 首先来看一下 NioEventLoopGroup 的类继承层次:
-![Alt text](./NioEventLoopGroup 类层次结构.png)
+![Alt text](NioEventLoopGroup 类层次结构.png)
 
 NioEventLoop 有几个重载的构造器, 不过内容都没有什么区别, 最终都是调用的父类MultithreadEventLoopGroup构造器:
 ```
@@ -389,11 +390,11 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
 ChannelInitializer 是一个抽象类, 它有一个抽象的方法 initChannel, 我们正是实现了这个方法, 并在这个方法中添加的自定义的 handler 的. 那么 initChannel 是哪里被调用的呢? 答案是 ChannelInitializer.channelRegistered 方法中. 
 我们来关注一下 channelRegistered 方法. 从上面的源码中, 我们可以看到, 在 channelRegistered 方法中, 会调用 initChannel 方法, 将自定义的 handler 添加到 ChannelPipeline 中, 然后调用 ctx.pipeline().remove(this) 将自己从 ChannelPipeline 中删除. 上面的分析过程, 可以用如下图片展示:
 一开始, ChannelPipeline 中只有三个 handler, head, tail 和我们添加的 ChannelInitializer.
-![Alt text](./1477130291691.png)
+![Alt text](1477130291691.png)
 接着 initChannel 方法调用后, 添加了自定义的 handler:
-![Alt text](./1477130295919.png)
+![Alt text](1477130295919.png)
 最后将 ChannelInitializer 删除:
-![Alt text](./1477130299722.png)
+![Alt text](1477130299722.png)
 
 分析到这里, 我们已经简单了解了自定义的 handler 是如何添加到 ChannelPipeline 中的, 不过限于主题与篇幅的原因, 我没有在这里详细展开 ChannelPipeline 的底层机制, 我打算在下一篇 **Netty 源码分析之 二 贯穿Netty 的大动脉 ── ChannelPipeline** 中对这个问题进行深入的探讨.
 
@@ -516,4 +517,4 @@ protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddr
 我们终于看到的最关键的部分了, 庆祝一下!
 上面的代码不用多说, 首先是获取 Java NIO SocketChannel, 即我们已经分析过的, 从 NioSocketChannel.newSocket 返回的 SocketChannel 对象; 然后是调用 SocketChannel.connect 方法完成 Java NIO 层面上的 Socket 的连接.
 最后, 上面的代码流程可以用如下时序图直观地展示:
-![Alt text](./Netty 客户端的连接时序图.png)
+![Alt text](Netty 客户端的连接时序图.png)
